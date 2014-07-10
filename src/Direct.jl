@@ -64,32 +64,55 @@ function expected_score(obs::Array{Float64}, fs::Array{SimplePdf}, score)
         o = obs[i]
         f = fs[i]
         a = score(f,o)
-        println(a)
-        println(as)
+        #println(a)
         push!(as, a)
     end
     A = mean(as)
 end
 
 function ign(p::SimplePdf, o::Float64)
+    if isinf(-log(pdf(p,o)))
+        println(o, ", ", p.mu, ", ", p.sigma, ", ", pdf(p,o))
+    end
     return -log(pdf(p,o))
 end
 
 
 function run_direct()
-    obs = create_historic_obs(0, 100)
+    obs = create_historic_obs(0, 20)
     
-    c1 = create_historic_forecasts(obs, 1., 1.)
-    c2 = create_historic_forecasts(obs, 2., 1.)
+    c1 = create_historic_forecasts(obs, 0.25, 2.)
+    c2 = create_historic_forecasts(obs, 0.50, 1.)
 
     # do leaf plot here
     # date; obs, c1, c2
-    leaf(c1,"baz")
+    fp = FramedPlot()
+    fp = leaf2(fp, c1, "red")
+    fp = leaf2(fp, c2, "blue")
 
-    
+    obsp = Points([1:length(obs)], obs, color="black")
+    style(obsp, kind="circle", size=0.3)
+    obsc = Curve([1:length(obs)], obs, color="grey")
+    add(fp, obsp)
+    add(fp, obsc)    
+
     A1 = expected_score(obs, c1, ign)
-    
+    A1p = Slope(0, (0,A1), kind="dotted", color="red")
+    setattr(A1p, label="A1")
+    add(fp, A1p)
+    println("------",A1)
 
+    A2 = expected_score(obs, c2, ign)
+    A2p = Slope(0, (0,A2), kind="dotted", color="blue")
+    setattr(A2p, label="A2")
+    add(fp, A2p)
+    println("------",A2)
+
+    l = Legend(.1, .9, {A1p, A2p})
+    add(fp,l)
+
+    
+    display(fp)
 
 end
 

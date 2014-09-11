@@ -8,6 +8,12 @@ using DtProtos.Pdfs
 using DtProtos
 
 
+function buildA(f, fo)
+    info("Building A")
+    
+
+end
+
 """
 maximise ... blah
 
@@ -78,9 +84,53 @@ function ign(p::SimplePdf, o::Float64)
 end
 
 
+function buildF(fo, ao, lambda, mu) # B1T, B2
+    info("Building F")
+    F = zeros(nX)
+    for i = [1:1:nX]
+        g = (1/tau) * fo[i] .* log(fo[i])
+        # for j = [1:1:ncAND]
+        #     B1Tyk = a .* 
+        # end
+    end
+    
+end
+
+function buildA()
+    info("Building A")
+    A = speye(nX)
+    A = A ./ tau
+end
+
+function solve(A, F)
+    info("Solve")
+    blas_set_num_threads(16)
+    #v = Sparsesolve(A,F)
+    f = \(A, F)
+    return f
+
+end
+
+function updateLambda(lambda, f, a)
+    for i in [1:length(lambda)]
+        lambda[i] += sum(f[i] * a[1])
+    end
+    return lambda
+end
+
+function updateMu(mu, f)
+    intf = sum(f^2) #* dx
+    mu += omega * (intf - 1)
+    return mu
+end
+
+
 function run_direct()
+    # Setup data (historic)
+    #
     obs = create_historic_obs(0, 20)
     
+    ncandidates = 2
     c1 = create_historic_forecasts(obs, 0.25, 2.)
     c2 = create_historic_forecasts(obs, 0.50, 1.)
 
@@ -110,10 +160,41 @@ function run_direct()
 
     l = Legend(.1, .9, {A1p, A2p})
     add(fp,l)
-
     
     display(fp)
 
+    # Setup numerics
+    #
+    # X: observation domain (and space over which integration done)
+    dobs = maximum(obs) - minimum(obs)
+    obsrange = [minimum(obs)-dobs : maximum(obs)+dobs] # ie X
+    X = obsrange
+    nX = length(X)
+
+    # # Main loop
+    # #
+    # f1 = zeros(X)
+    # f0 = f1
+    # mu = 0.
+    # lambda = zeros(ncadidates)
+    # tau = 1.0
+    # ncount = -1
+    # while ncount < maxcount
+    #     ncount += 1
+    #     F  = buildF(f, fo, mu)
+    #     A  = buildA(f, fo)
+    #     fo = f
+    #     f  = solve(A, F)
+
+    #     f[1] = f[2]
+    #     f[end-1] = f[end-2]
+        
+    #     mu = updateMu(mu, f)
+    #     info("mu = ", mu)
+
+    #     lambda = updateLambda(lambda, f)
+    #     info("lambda = ", lambda)
+    # end
 end
 
 
